@@ -14,6 +14,10 @@ anyone rewriting this file. See the guidebook (docs/01_guidebook_geographic_agen
 for the full walkthrough of *why* each piece exists.
 """
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import os
 import re
 
@@ -36,18 +40,24 @@ if USE_LLM:
 
     class LocationPair(BaseModel):
         origin: str = Field(description="The starting location mentioned by the user")
-        destination: str = Field(description="The destination location mentioned by the user")
+        destination: str = Field(
+            description="The destination location mentioned by the user"
+        )
 
-    _llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0)
+    _llm = ChatGoogleGenerativeAI(model="gemini-3.5-flash-lite", temperature=0)
     _structured_llm = _llm.with_structured_output(LocationPair)
 
-    _prompt = ChatPromptTemplate.from_messages([
-        ("system",
-         "Extract the starting point (origin) and destination from the "
-         "user's travel request. If no origin is mentioned, set origin "
-         "to 'current location'."),
-        ("human", "{message}"),
-    ])
+    _prompt = ChatPromptTemplate.from_messages(
+        [
+            (
+                "system",
+                "Extract the starting point (origin) and destination from the "
+                "user's travel request. If no origin is mentioned, set origin "
+                "to 'current location'.",
+            ),
+            ("human", "{message}"),
+        ]
+    )
 
 
 def parse_locations(state: GeoAgentState) -> GeoAgentState:
@@ -61,7 +71,10 @@ def parse_locations(state: GeoAgentState) -> GeoAgentState:
     else:
         match = re.search(r"from\s+(.+?)\s+to\s+(.+)", message, re.IGNORECASE)
         if match:
-            origin_text, destination_text = match.group(1).strip(), match.group(2).strip()
+            origin_text, destination_text = (
+                match.group(1).strip(),
+                match.group(2).strip(),
+            )
         else:
             origin_text, destination_text = "current location", message.strip()
 
@@ -75,12 +88,23 @@ def geocode_both(state: GeoAgentState) -> GeoAgentState:
 
     if not origin_geo or not dest_geo:
         missing = "origin" if not origin_geo else "destination"
-        return {**state, "error": f"Couldn't find a location for the {missing}. Try a more specific place name."}
+        return {
+            **state,
+            "error": f"Couldn't find a location for the {missing}. Try a more specific place name.",
+        }
 
     return {
         **state,
-        "origin": {**origin_geo, "input_text": state["origin_text"], "nearest_stations": []},
-        "destination": {**dest_geo, "input_text": state["destination_text"], "nearest_stations": []},
+        "origin": {
+            **origin_geo,
+            "input_text": state["origin_text"],
+            "nearest_stations": [],
+        },
+        "destination": {
+            **dest_geo,
+            "input_text": state["destination_text"],
+            "nearest_stations": [],
+        },
     }
 
 
@@ -90,7 +114,9 @@ def find_nearest_stations(state: GeoAgentState) -> GeoAgentState:
     destination = dict(state["destination"])
 
     origin["nearest_stations"] = find_nearest_transit_hubs(origin["lat"], origin["lon"])
-    destination["nearest_stations"] = find_nearest_transit_hubs(destination["lat"], destination["lon"])
+    destination["nearest_stations"] = find_nearest_transit_hubs(
+        destination["lat"], destination["lon"]
+    )
 
     return {**state, "origin": origin, "destination": destination}
 
