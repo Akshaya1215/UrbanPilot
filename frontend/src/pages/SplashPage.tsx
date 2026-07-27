@@ -19,7 +19,7 @@ export function SplashPage() {
           <Sparkles size={34} />
         </div>
         <p className="mb-6 text-sm font-semibold uppercase tracking-[0.4em] text-cyan-300">Multi-Agent Urban Mobility Intelligence</p>
-        <h1 className="text-5xl font-semibold tracking-[-0.03em] text-white sm:text-7xl">UrbanPilot AI</h1>
+        <h1 className="text-5xl font-semibold text-white sm:text-7xl">UrbanPilot AI</h1>
         <p className="mx-auto mt-7 max-w-2xl text-lg leading-8 text-slate-400 sm:text-xl">
           A premium intelligence layer for faster, safer, and smarter city movement.
         </p>
