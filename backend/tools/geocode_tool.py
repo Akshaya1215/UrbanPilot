@@ -21,7 +21,9 @@ NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 # Nominatim asks that you identify your app + give a contact method.
 # Replace the email with your own before the review, in case they ever
 # need to reach out about usage.
-USER_AGENT = "TransitArbitrageSwarm/1.0 (student project; contact: youremail@example.com)"
+USER_AGENT = (
+    "TransitArbitrageSwarm/1.0 (student project; contact: barathm238@gmail.com)"
+)
 
 _last_call_time = 0.0
 

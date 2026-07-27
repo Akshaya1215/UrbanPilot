@@ -28,7 +28,11 @@ def test_unparseable_location():
 
 
 if __name__ == "__main__":
-    message = "from Anna Nagar to T Nagar"
-    print(f"Running agent on: {message!r}\n")
-    output = run_geographic_agent(message)
-    print(json.dumps(output, indent=2))
+    while True:
+        message = input("\nEnter a route (or 'exit'): ")
+
+        if message.lower() == "exit":
+            break
+
+        output = run_geographic_agent(message)
+        print(json.dumps(output, indent=2))
