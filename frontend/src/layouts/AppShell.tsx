@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { BrainCircuit, Compass, History, LayoutGrid, Map, Navigation, UserRound, Zap } from 'lucide-react'
+import { BrainCircuit, Compass, LayoutGrid, Map, Navigation, UserRound, Zap } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Home', icon: LayoutGrid },
@@ -7,7 +7,6 @@ const navItems = [
   { to: '/recommendation', label: 'Route', icon: Compass },
   { to: '/compare', label: 'Compare', icon: Navigation },
   { to: '/map', label: 'Live Map', icon: Map },
-  { to: '/history', label: 'History', icon: History },
 ]
 
 export function AppShell() {

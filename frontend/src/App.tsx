@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './layouts/AppShell'
 import { ComparePage } from './pages/ComparePage'
-import { HistoryPage } from './pages/HistoryPage'
 import { HomePage } from './pages/HomePage'
 import { JourneyPage } from './pages/JourneyPage'
 import { MapPage } from './pages/MapPage'
@@ -21,7 +20,6 @@ function App() {
           <Route path="compare" element={<ComparePage />} />
           <Route path="journey" element={<JourneyPage />} />
           <Route path="map" element={<MapPage />} />
-          <Route path="history" element={<HistoryPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/welcome" replace />} />
       </Routes>
