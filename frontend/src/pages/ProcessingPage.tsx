@@ -14,8 +14,17 @@ const toneClasses = {
   amber:   'border-[#fde9b0] bg-[#fef7e0] text-[#fbbc04]',
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function textOrNull(value: unknown) {
+  return typeof value === 'string' && value.trim().length > 0 ? value : null
+}
+
 function AgentCard({ agent, index }: { agent: (typeof agentSteps)[number]; index: number }) {
   const Icon = agentIcons[index] ?? Cpu
+  const logs = agent?.logs ?? []
   return (
     <motion.div
       initial={{ opacity: 0, y: 14 }}
@@ -54,12 +63,16 @@ function AgentCard({ agent, index }: { agent: (typeof agentSteps)[number]; index
       </div>
 
       <div className="mt-3 space-y-1.5">
-        {agent.logs.map((log) => (
+        {logs.length > 0 ? logs.map((log) => (
           <div key={log} className="flex items-center gap-2 rounded-lg border border-[#e0e0e0] bg-[#f8f9fa] px-3 py-2 text-xs text-[#5f6368]">
             <Activity size={12} className="text-[#1a73e8]" />
             {log}
           </div>
-        ))}
+        )) : (
+          <div className="rounded-lg border border-[#e0e0e0] bg-[#f8f9fa] px-3 py-2 text-xs text-[#5f6368]">
+            Waiting for agent telemetry.
+          </div>
+        )}
       </div>
     </motion.div>
   )
@@ -68,15 +81,11 @@ function AgentCard({ agent, index }: { agent: (typeof agentSteps)[number]; index
 export function ProcessingPage() {
   const geographicResult = useRouteStore((state) => state.geographicResult)
 
-  // Safe cast — geographicResult is `unknown`, guard every access
-  const result = (geographicResult ?? {}) as {
-    origin_text?: string
-    destination_text?: string
-  }
-
-  const originText      = result?.origin_text      ?? null
-  const destinationText = result?.destination_text ?? null
-  const hasRoute        = Boolean(originText && destinationText)
+  const result = isRecord(geographicResult) ? geographicResult : null
+  const originText = textOrNull(result?.origin_text)
+  const destinationText = textOrNull(result?.destination_text)
+  const hasRoute = Boolean(originText && destinationText)
+  const isLoadingRoute = geographicResult === undefined
 
   return (
     <div className="space-y-6">
@@ -98,7 +107,11 @@ export function ProcessingPage() {
           </h1>
 
           <div className="mt-4 text-sm leading-7 text-[#5f6368]">
-            {hasRoute ? (
+            {isLoadingRoute ? (
+              <p className="rounded-xl border border-[#d2e3fc] bg-[#e8f0fe] px-4 py-3 text-[#5f6368]">
+                Loading route context...
+              </p>
+            ) : hasRoute ? (
               <p>
                 Route detected from{' '}
                 <span className="font-semibold text-[#1a73e8]">{originText}</span>

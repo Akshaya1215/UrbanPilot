@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { LatLngBoundsExpression } from 'leaflet'
@@ -23,14 +23,13 @@ type MapViewProps = {
 }
 
 export function MapView({ origin, destination, route, loading }: MapViewProps) {
-  const boundsRef = useRef<LatLngBoundsExpression | null>(null)
-
-  if (origin && destination) {
-    boundsRef.current = [
+  const bounds = useMemo<LatLngBoundsExpression | null>(() => {
+    if (!origin || !destination) return null
+    return [
       [origin.lat, origin.lon],
       [destination.lat, destination.lon],
     ]
-  }
+  }, [destination, origin])
 
   return (
     <div className="relative min-h-[480px] w-full">
@@ -48,7 +47,7 @@ export function MapView({ origin, destination, route, loading }: MapViewProps) {
           maxZoom={19}
         />
         <RouteRenderer origin={origin} destination={destination} route={route} />
-        {boundsRef.current && <FitBounds bounds={boundsRef.current} />}
+        {bounds && <FitBounds bounds={bounds} />}
       </MapContainer>
 
       {loading && (

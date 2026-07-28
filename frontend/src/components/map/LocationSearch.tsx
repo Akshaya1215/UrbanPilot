@@ -40,7 +40,11 @@ export function LocationSearch({ label, placeholder, icon, value, onSelect, onCl
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!value) setQuery('')
+    if (!value) {
+      const timer = setTimeout(() => setQuery(''), 0)
+      return () => clearTimeout(timer)
+    }
+    return undefined
   }, [value])
 
   useEffect(() => {

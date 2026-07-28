@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { AlertTriangle, ArrowRight, BadgeCheck, BatteryCharging, Bike, CloudRain, Clock3, Coins, Footprints, Gauge, Leaf, Loader2, Navigation, Route, Sparkles, Thermometer, TrainFront } from 'lucide-react'
 import { Link } from 'react-router-dom'
@@ -150,7 +150,7 @@ export function RecommendationPage() {
   const [environmentError, setEnvironmentError] = useState<string | null>(null)
   const [environmentLoading, setEnvironmentLoading] = useState(true)
 
-  const loadEnvironmentAnalysis = async () => {
+  const loadEnvironmentAnalysis = useCallback(async () => {
     setEnvironmentLoading(true)
     setEnvironmentError(null)
 
@@ -163,11 +163,12 @@ export function RecommendationPage() {
     } finally {
       setEnvironmentLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    void loadEnvironmentAnalysis()
-  }, [])
+    const timer = window.setTimeout(() => void loadEnvironmentAnalysis(), 0)
+    return () => window.clearTimeout(timer)
+  }, [loadEnvironmentAnalysis])
 
   return (
     <div className="space-y-8">

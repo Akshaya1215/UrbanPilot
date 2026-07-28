@@ -470,27 +470,28 @@ async def test_environment_endpoint_invalid_coordinates(body: dict[str, Any]) ->
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_status"),
+    "exception",
     [
-        (MissingWeatherAPIKeyError("OPENWEATHER_API_KEY is not configured."), 503),
-        (MissingTomTomAPIKeyError("TOMTOM_API_KEY is not configured."), 503),
-        (WeatherAPITimeoutError("OpenWeather request timed out."), 504),
-        (TrafficAPITimeoutError("TomTom Traffic request timed out."), 504),
-        (WeatherRateLimitError("OpenWeather rate limit exceeded."), 429),
-        (TrafficRateLimitError("TomTom route rate limit exceeded."), 429),
-        (WeatherAPIUnavailableError("OpenWeather service is unavailable."), 502),
-        (TrafficAPIUnavailableError("TomTom route service is unavailable."), 502),
+        MissingWeatherAPIKeyError("OPENWEATHER_API_KEY is not configured."),
+        MissingTomTomAPIKeyError("TOMTOM_API_KEY is not configured."),
+        WeatherAPITimeoutError("OpenWeather request timed out."),
+        TrafficAPITimeoutError("TomTom Traffic request timed out."),
+        WeatherRateLimitError("OpenWeather rate limit exceeded."),
+        TrafficRateLimitError("TomTom route rate limit exceeded."),
+        WeatherAPIUnavailableError("OpenWeather service is unavailable."),
+        TrafficAPIUnavailableError("TomTom route service is unavailable."),
     ],
 )
-async def test_environment_endpoint_error_mapping(
-    exception: Exception,
-    expected_status: int,
-) -> None:
+async def test_environment_endpoint_external_failures_return_fallback_json(exception: Exception) -> None:
     class FailingAgent:
         async def analyze(self, **kwargs: Any) -> dict[str, Any]:
             raise exception
 
     response = await post_environment(make_route_app(FailingAgent()))
 
-    assert response.status_code == expected_status
-    assert response.json()["detail"] == str(exception)
+    assert response.status_code == 200
+    body = response.json()
+    assert str(exception) in body["message"]
+    assert body["weather"]["condition"] == "Unavailable"
+    assert body["traffic"]["level"] == "Unavailable"
+    assert str(exception) in body["travelImpact"]["reason"]

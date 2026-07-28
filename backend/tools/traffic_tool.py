@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from datetime import datetime
 from typing import Any
@@ -11,6 +12,7 @@ import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class TrafficToolError(Exception):
@@ -101,15 +103,29 @@ async def _request_route_with_retry(
     last_timeout: httpx.TimeoutException | None = None
     for attempt in range(2):
         try:
+            logger.info(
+                "TomTom route request: origin=%s destination=%s url=%s attempt=%s",
+                origin,
+                destination,
+                route_url,
+                attempt + 1,
+            )
             response = await client.get(route_url, params=params)
+            logger.info(
+                "TomTom route response: status=%s body=%s",
+                response.status_code,
+                response.text[:500],
+            )
             return _json_or_raise(response, "TomTom route")
         except httpx.TimeoutException as exc:
             last_timeout = exc
+            logger.exception("TomTom route caught timeout.")
             if attempt == 0:
                 await asyncio.sleep(0.2)
                 continue
             raise TrafficAPITimeoutError("TomTom Traffic request timed out.") from exc
         except httpx.HTTPError as exc:
+            logger.exception("TomTom route caught exception.")
             raise TrafficAPIUnavailableError("TomTom Traffic request failed.") from exc
 
     raise TrafficAPITimeoutError("TomTom Traffic request timed out.") from last_timeout
@@ -136,14 +152,26 @@ async def _fetch_incidents_safely(
     }
 
     try:
+        logger.info(
+            "TomTom incidents request: origin=%s destination=%s bbox=%s",
+            origin,
+            destination,
+            params["bbox"],
+        )
         response = await client.get(
             "https://api.tomtom.com/traffic/services/5/incidentDetails",
             params=params,
+        )
+        logger.info(
+            "TomTom incidents response: status=%s body=%s",
+            response.status_code,
+            response.text[:500],
         )
         if response.status_code >= 400:
             return []
         data = response.json()
     except (httpx.HTTPError, ValueError):
+        logger.exception("TomTom incidents caught exception.")
         return []
 
     incidents = data.get("incidents", [])

@@ -23,6 +23,12 @@ type RoutePlannerProps = {
 }
 
 const preferences: TravelPreference[] = ['Fastest', 'Cheapest', 'Balanced']
+type GooglePlacesWindow = Window & typeof globalThis & {
+  google: typeof google
+}
+type PlaceAutocompleteElementConstructor = new (options?: {
+  componentRestrictions?: { country: string }
+}) => HTMLElement
 
 function toDatetimeLocalValue(date: Date) {
   const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
@@ -46,7 +52,8 @@ export function RoutePlanner({ mapsLoaded, disabled = false, loading = false, on
       placeRef: React.MutableRefObject<google.maps.places.Place | null>,
       placeholder: string,
     ) {
-      const el = new (window as any).google.maps.places.PlaceAutocompleteElement({
+      const PlaceAutocompleteElement = (window as GooglePlacesWindow).google.maps.places.PlaceAutocompleteElement as unknown as PlaceAutocompleteElementConstructor
+      const el = new PlaceAutocompleteElement({
         componentRestrictions: { country: 'in' },
       }) as HTMLElement
       el.setAttribute('placeholder', placeholder)

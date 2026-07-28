@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from typing import Any
 
@@ -9,6 +10,7 @@ import httpx
 from dotenv import load_dotenv
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 
 class WeatherToolError(Exception):
@@ -54,13 +56,21 @@ async def fetch_weather(
     owns_client = client is None
     http_client = client or httpx.AsyncClient(timeout=timeout_seconds)
     try:
+        logger.info("OpenWeather request: lat=%s lng=%s", lat, lng)
         response = await http_client.get(
             "https://api.openweathermap.org/data/2.5/weather",
             params=params,
         )
+        logger.info(
+            "OpenWeather response: status=%s body=%s",
+            response.status_code,
+            response.text[:500],
+        )
     except httpx.TimeoutException as exc:
+        logger.exception("OpenWeather caught exception.")
         raise WeatherAPITimeoutError("OpenWeather request timed out.") from exc
     except httpx.HTTPError as exc:
+        logger.exception("OpenWeather caught exception.")
         raise WeatherAPIUnavailableError("OpenWeather request failed.") from exc
     finally:
         if owns_client:

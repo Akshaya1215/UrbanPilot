@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Annotated, Any
 
@@ -26,6 +27,7 @@ from backend.tools.weather_tool import (
 )
 
 router = APIRouter(prefix="/api/environment", tags=["environment"])
+logger = logging.getLogger(__name__)
 
 
 class CoordinateModel(BaseModel):
@@ -87,11 +89,40 @@ class EnvironmentAnalyzeResponse(BaseModel):
     weather: WeatherResponse
     traffic: TrafficResponse
     travelImpact: TravelImpactResponse
+    message: str | None = None
 
 
 def get_environmental_agent() -> EnvironmentalIntelligenceAgent:
     """Dependency injection hook for tests and future orchestrator wiring."""
     return environmental_agent
+
+
+def _fallback_analysis(message: str) -> dict[str, Any]:
+    """Return a contract-compatible response when external providers fail."""
+    return {
+        "message": message,
+        "weather": {
+            "condition": "Unavailable",
+            "temperature": 0,
+            "humidity": 0,
+            "windSpeed": 0,
+            "visibility": 0,
+            "rain": False,
+            "description": message,
+        },
+        "traffic": {
+            "level": "Unavailable",
+            "delayMinutes": 0,
+            "averageSpeed": 0,
+            "roadIncidents": [],
+        },
+        "travelImpact": {
+            "walkingComfort": "Unknown",
+            "bikeComfort": "Unknown",
+            "recommendedTransport": "Bus",
+            "reason": message,
+        },
+    }
 
 
 @router.post(
@@ -107,29 +138,39 @@ async def analyze_environment(
     ],
 ) -> dict[str, Any]:
     """Analyze route weather, traffic, and travel impact."""
+    request_log = {
+        "origin": payload.origin.model_dump(),
+        "destination": payload.destination.model_dump(),
+        "departureTime": payload.departureTime.isoformat(),
+    }
+    logger.info("Environment analyze request: %s", request_log)
     try:
-        return await agent.analyze(
+        response = await agent.analyze(
             origin=payload.origin.model_dump(),
             destination=payload.destination.model_dump(),
             departure_time=payload.departureTime,
         )
+        logger.info("Environment analyze response: %s", response)
+        return response
     except (MissingWeatherAPIKeyError, MissingTomTomAPIKeyError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail=str(exc),
-        ) from exc
+        message = f"Environmental provider configuration error: {exc}"
+        logger.exception("Environment analyze caught exception: %s", message)
+        return _fallback_analysis(message)
     except (WeatherAPITimeoutError, TrafficAPITimeoutError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail=str(exc),
-        ) from exc
+        message = f"Environmental provider timed out: {exc}"
+        logger.exception("Environment analyze caught exception: %s", message)
+        return _fallback_analysis(message)
     except (WeatherRateLimitError, TrafficRateLimitError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=str(exc),
-        ) from exc
+        message = f"Environmental provider rate limit reached: {exc}"
+        logger.exception("Environment analyze caught exception: %s", message)
+        return _fallback_analysis(message)
     except (WeatherAPIUnavailableError, TrafficAPIUnavailableError) as exc:
+        message = f"Environmental provider unavailable: {exc}"
+        logger.exception("Environment analyze caught exception: %s", message)
+        return _fallback_analysis(message)
+    except Exception as exc:
+        logger.exception("Unexpected environment analyze exception.")
         raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=str(exc),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Environmental analysis failed unexpectedly.",
         ) from exc
