@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Clock3, LocateFixed, MapPin, Route, SlidersHorizontal } from 'lucide-react'
+import { ArrowRight, Clock3, LocateFixed, MapPin, SlidersHorizontal } from 'lucide-react'
 import { GlassCard } from '../ui/GlassCard'
 import { LocationSearch } from './LocationSearch'
 import type { OsrmRoute, SearchResult } from './types'
@@ -46,7 +46,7 @@ async function fetchOsrmRoute(origin: SearchResult, destination: SearchResult): 
 type Phase = 'idle' | 'routing' | 'analyzing'
 
 type RoutePlannerProps = {
-  analyzing: boolean   // controlled externally while backend call is in-flight
+  analyzing: boolean
   onRouteReady: (
     origin: SearchResult,
     destination: SearchResult,
@@ -91,23 +91,22 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
   }
 
   return (
-    <GlassCard className="gradient-border p-5 sm:p-6">
-      <div className="mb-6 flex items-center justify-between">
+    <GlassCard className="p-5 sm:p-6">
+      <div className="mb-5 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300">Trip Planner</p>
-          <h2 className="mt-2 text-[28px] font-semibold text-white">Plan a live route</h2>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#1a73e8]">Trip Planner</p>
+          <h2 className="mt-1 text-xl font-semibold text-[#202124]">Plan a live route</h2>
         </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-400/25 bg-cyan-400/10 text-cyan-300">
-          <Route size={20} />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fce8e6] text-[#ea4335]">
+          <MapPin size={18} />
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <LocationSearch
           label="Current Location"
           placeholder="Search your starting point"
-          icon={<LocateFixed size={15} />}
-          accentClass="hover:border-cyan-400/30 hover:bg-white/[0.075]"
+          icon={<LocateFixed size={14} />}
           value={origin}
           onSelect={setOrigin}
           onClear={() => setOrigin(null)}
@@ -116,16 +115,15 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
         <LocationSearch
           label="Destination"
           placeholder="Search destination"
-          icon={<MapPin size={15} />}
-          accentClass="hover:border-violet-400/30 hover:bg-white/[0.075]"
+          icon={<MapPin size={14} />}
           value={destination}
           onSelect={setDestination}
           onClear={() => setDestination(null)}
         />
 
-        <div className="rounded-[24px] border border-white/10 bg-white/[0.045] p-4">
-          <p className="mb-3 flex items-center gap-2 text-sm text-slate-400">
-            <SlidersHorizontal size={15} /> Travel Preference
+        <div className="rounded-xl border border-[#e0e0e0] bg-[#f8f9fa] p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-medium text-[#5f6368]">
+            <SlidersHorizontal size={14} /> Travel Preference
           </p>
           <div className="grid grid-cols-3 gap-2">
             {PREFERENCES.map((item) => (
@@ -134,10 +132,10 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
                 type="button"
                 onClick={() => setPreference(item)}
                 disabled={busy}
-                className={`rounded-full border px-3 py-2 text-sm font-semibold transition disabled:pointer-events-none ${
+                className={`rounded-full border px-3 py-2 text-sm font-medium transition disabled:pointer-events-none ${
                   preference === item
-                    ? 'border-cyan-400/35 bg-cyan-400/15 text-cyan-200 shadow-[0_0_24px_rgba(6,182,212,0.16)]'
-                    : 'border-white/10 bg-white/[0.04] text-slate-300 hover:border-violet-400/30 hover:text-white'
+                    ? 'border-[#1a73e8] bg-[#e8f0fe] text-[#1a73e8]'
+                    : 'border-[#e0e0e0] bg-white text-[#5f6368] hover:border-[#1a73e8] hover:text-[#1a73e8]'
                 }`}
               >
                 {item}
@@ -146,16 +144,16 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
           </div>
         </div>
 
-        <label className="block rounded-[24px] border border-white/10 bg-white/[0.055] p-4 transition hover:border-emerald-400/30 hover:bg-white/[0.075]">
-          <span className="flex items-center gap-2 text-sm text-slate-400">
-            <Clock3 size={15} /> Departure Time
+        <label className="block rounded-xl border border-[#e0e0e0] bg-white p-4 transition hover:border-[#1a73e8]">
+          <span className="flex items-center gap-2 text-sm font-medium text-[#5f6368]">
+            <Clock3 size={14} /> Departure Time
           </span>
           <input
             type="datetime-local"
             value={departureTime}
             onChange={(e) => setDepartureTime(e.target.value)}
             disabled={busy}
-            className="mt-2 w-full border-0 bg-transparent text-base font-semibold text-white outline-none [color-scheme:dark] disabled:opacity-50"
+            className="mt-2 w-full border-0 bg-transparent text-sm font-semibold text-[#202124] outline-none disabled:opacity-50"
           />
         </label>
 
@@ -165,7 +163,7 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
           type="button"
           onClick={handleFindRoute}
           disabled={busy}
-          className="relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-[#3B82F6] via-[#06B6D4] to-[#8B5CF6] px-5 py-4 text-sm font-bold text-white shadow-[0_0_38px_rgba(6,182,212,0.28)] transition disabled:cursor-not-allowed disabled:opacity-70"
+          className="flex w-full items-center justify-center gap-2 rounded-full bg-[#1a73e8] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1557b0] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {busy && (
             <span className="mr-1 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -173,15 +171,15 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
           <AnimatePresence mode="wait">
             <motion.span
               key={currentPhase}
-              initial={{ opacity: 0, y: 6 }}
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.15 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.12 }}
             >
               {phaseLabel[currentPhase]}
             </motion.span>
           </AnimatePresence>
-          {!busy && <ArrowRight size={17} />}
+          {!busy && <ArrowRight size={16} />}
         </motion.button>
       </div>
     </GlassCard>

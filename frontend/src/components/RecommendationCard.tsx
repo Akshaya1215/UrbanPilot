@@ -8,8 +8,8 @@ type RecommendationCardProps = {
   loading?: boolean
 }
 
-function SkeletonLine({ className = '' }: { className?: string }) {
-  return <div className={`animate-pulse rounded-full bg-white/10 ${className}`} />
+function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={`skeleton rounded-lg ${className}`} />
 }
 
 export function RecommendationCard({ recommendation, loading = false }: RecommendationCardProps) {
@@ -18,41 +18,43 @@ export function RecommendationCard({ recommendation, loading = false }: Recommen
 
   return (
     <GlassCard className="h-full p-5">
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Recommendation</p>
-          {loading ? <SkeletonLine className="mt-3 h-8 w-36" /> : <h3 className="mt-2 text-[26px] font-semibold text-white">{transport}</h3>}
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#5f6368]">Recommendation</p>
+          {loading
+            ? <Skeleton className="mt-2 h-6 w-36" />
+            : <h3 className="mt-1 text-lg font-semibold text-[#202124]">{transport}</h3>}
         </div>
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-400/25 bg-emerald-400/10 text-emerald-300">
-          <Sparkles size={21} />
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#e6f4ea] text-[#34a853]">
+          <Sparkles size={18} />
         </div>
       </div>
 
       {loading ? (
-        <div className="space-y-3">
-          <SkeletonLine className="h-14 w-full rounded-[18px]" />
-          <SkeletonLine className="h-20 w-full rounded-[18px]" />
+        <div className="space-y-2">
+          <Skeleton className="h-14 w-full rounded-xl" />
+          <Skeleton className="h-16 w-full rounded-xl" />
         </div>
       ) : recommendation ? (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="flex items-center gap-3 rounded-[22px] border border-emerald-400/20 bg-emerald-400/10 p-4 text-emerald-200">
-            <TransportIcon size={20} />
-            <p className="text-3xl font-bold text-white">{recommendation.recommendedTransport}</p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <div className="flex items-center gap-3 rounded-xl border border-[#ceead6] bg-[#e6f4ea] p-3">
+            <TransportIcon size={18} className="text-[#34a853]" />
+            <p className="text-base font-semibold text-[#202124]">{recommendation.recommendedTransport}</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-[20px] border border-white/10 bg-white/[0.045] p-4">
-              <div className="flex items-center gap-2 text-sm text-slate-400"><Footprints size={15} /> Walking</div>
-              <p className="mt-2 text-xl font-bold text-white">{recommendation.walkingComfort}</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-[#e0e0e0] bg-[#f8f9fa] p-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-[#5f6368]"><Footprints size={13} /> Walking</div>
+              <p className="mt-1 text-sm font-semibold text-[#202124]">{recommendation.walkingComfort}</p>
             </div>
-            <div className="rounded-[20px] border border-white/10 bg-white/[0.045] p-4">
-              <div className="flex items-center gap-2 text-sm text-slate-400"><Bike size={15} /> Bike</div>
-              <p className="mt-2 text-xl font-bold text-white">{recommendation.bikeComfort}</p>
+            <div className="rounded-xl border border-[#e0e0e0] bg-[#f8f9fa] p-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-[#5f6368]"><Bike size={13} /> Bike</div>
+              <p className="mt-1 text-sm font-semibold text-[#202124]">{recommendation.bikeComfort}</p>
             </div>
           </div>
-          <p className="text-sm leading-6 text-slate-300">{recommendation.reason}</p>
+          <p className="text-sm leading-6 text-[#5f6368]">{recommendation.reason}</p>
         </motion.div>
       ) : (
-        <p className="text-sm leading-6 text-slate-400">UrbanPilot will recommend a mode after checking live route, weather, and traffic.</p>
+        <p className="text-sm leading-6 text-[#5f6368]">UrbanPilot will recommend a mode after checking live route, weather, and traffic.</p>
       )}
     </GlassCard>
   )

@@ -25,13 +25,12 @@ type LocationSearchProps = {
   label: string
   placeholder: string
   icon: React.ReactNode
-  accentClass: string
   value: SearchResult | null
   onSelect: (result: SearchResult) => void
   onClear: () => void
 }
 
-export function LocationSearch({ label, placeholder, icon, accentClass, value, onSelect, onClear }: LocationSearchProps) {
+export function LocationSearch({ label, placeholder, icon, value, onSelect, onClear }: LocationSearchProps) {
   const [query, setQuery] = useState(value?.display_name.split(',')[0] ?? '')
   const [results, setResults] = useState<SearchResult[]>([])
   const [open, setOpen] = useState(false)
@@ -40,12 +39,10 @@ export function LocationSearch({ label, placeholder, icon, accentClass, value, o
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Sync display when value cleared externally
   useEffect(() => {
     if (!value) setQuery('')
   }, [value])
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -97,31 +94,31 @@ export function LocationSearch({ label, placeholder, icon, accentClass, value, o
 
   return (
     <div ref={containerRef} className="relative">
-      <label className={`block rounded-[24px] border border-white/10 bg-white/[0.055] p-4 transition hover:border-white/20 ${accentClass}`}>
-        <span className="flex items-center gap-2 text-sm text-slate-400">
+      <label className="block rounded-xl border border-[#e0e0e0] bg-white p-3 transition focus-within:border-[#1a73e8] focus-within:ring-2 focus-within:ring-[#1a73e8]/20 hover:border-[#bdbdbd]">
+        <span className="flex items-center gap-2 text-xs font-medium text-[#5f6368]">
           {icon} {label}
         </span>
-        <div className="mt-2 flex items-center gap-2">
+        <div className="mt-1.5 flex items-center gap-2">
           <input
             value={query}
             onChange={handleChange}
             onFocus={() => results.length > 0 && setOpen(true)}
             placeholder={placeholder}
-            className="min-w-0 flex-1 border-0 bg-transparent text-base font-semibold text-white outline-none placeholder:text-slate-600"
+            className="min-w-0 flex-1 border-0 bg-transparent text-sm font-medium text-[#202124] outline-none placeholder:text-[#9aa0a6]"
           />
-          {loading && <Loader2 size={16} className="shrink-0 animate-spin text-slate-400" />}
+          {loading && <Loader2 size={14} className="shrink-0 animate-spin text-[#5f6368]" />}
           {!loading && query && (
-            <button type="button" onClick={handleClear} className="shrink-0 text-slate-500 hover:text-white">
-              <X size={15} />
+            <button type="button" onClick={handleClear} className="shrink-0 text-[#9aa0a6] hover:text-[#5f6368]">
+              <X size={14} />
             </button>
           )}
         </div>
       </label>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-[9999] mt-2 overflow-hidden rounded-[20px] border border-white/10 bg-[#0D1526]/95 shadow-[0_24px_80px_rgba(2,8,23,0.6)] backdrop-blur-2xl">
+        <div className="absolute left-0 right-0 top-full z-[9999] mt-1 overflow-hidden rounded-xl border border-[#e0e0e0] bg-white shadow-lg">
           {error ? (
-            <p className="px-4 py-3 text-sm text-rose-400">{error}</p>
+            <p className="px-4 py-3 text-sm text-[#ea4335]">{error}</p>
           ) : (
             <ul>
               {results.map((r) => (
@@ -129,10 +126,10 @@ export function LocationSearch({ label, placeholder, icon, accentClass, value, o
                   <button
                     type="button"
                     onMouseDown={() => handleSelect(r)}
-                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-white/[0.06]"
+                    className="flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-[#f1f3f4]"
                   >
-                    <MapPin size={14} className="mt-0.5 shrink-0 text-slate-500" />
-                    <span className="text-sm leading-5 text-slate-200">{r.display_name}</span>
+                    <MapPin size={14} className="mt-0.5 shrink-0 text-[#ea4335]" />
+                    <span className="text-sm leading-5 text-[#202124]">{r.display_name}</span>
                   </button>
                 </li>
               ))}
