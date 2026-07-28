@@ -1,9 +1,12 @@
 import { motion } from 'framer-motion'
 import { ArrowRight, Bike, BrainCircuit, Car, Footprints, LocateFixed, MapPin, Radio, Route, ShieldCheck, Sparkles, TrainFront } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { GlassCard } from '../components/ui/GlassCard'
 import { JourneyCard } from '../components/ui/JourneyCard'
 import { recentTrips, savedPlaces, trafficOverview } from '../services/mockData'
+import { useState } from 'react'
+import { runGeographicAgent } from '../services/api'
+import { useRouteStore } from '../store/routeStore'
 
 const preferenceChips = ['Cheapest', 'Fastest', 'Balanced', 'Luxury', 'Eco']
 
@@ -15,6 +18,46 @@ const statToneClasses = {
 }
 
 function SearchCard() {
+
+  const navigate = useNavigate()
+
+  const { setQuery, setGeographicResult } = useRouteStore()
+
+  const [origin, setOrigin] = useState('North Loop, Sector 12')
+
+  const [destination, setDestination] = useState('Skyline Tower, Business District')
+
+  const [loading, setLoading] = useState(false)
+
+  async function handleSearch() {
+    try {
+      setLoading(true)
+
+      const message = `I need to go from ${origin} to ${destination}`
+
+      setQuery(message)
+
+      const response = await runGeographicAgent(message)
+
+      console.log(response)
+
+      setGeographicResult(response.result)
+
+      navigate('/processing')
+
+    } catch (err) {
+
+      console.error(err)
+
+      alert('Backend request failed')
+
+    } finally {
+
+      setLoading(false)
+
+    }
+  }
+
   return (
     <GlassCard className="gradient-border p-5 sm:p-6">
       <div className="mb-5 flex items-center justify-between">
@@ -30,11 +73,19 @@ function SearchCard() {
       <div className="space-y-4">
         <label className="block rounded-[22px] border border-white/10 bg-white/[0.055] p-4">
           <span className="flex items-center gap-2 text-sm text-slate-400"><LocateFixed size={15} /> Current Location</span>
-          <input className="mt-2 w-full border-0 bg-transparent text-base font-semibold text-white outline-none placeholder:text-slate-600" defaultValue="North Loop, Sector 12" />
+          <input
+  className="mt-2 w-full border-0 bg-transparent text-base font-semibold text-white outline-none placeholder:text-slate-600"
+  value={origin}
+  onChange={(e) => setOrigin(e.target.value)}
+/>
         </label>
         <label className="block rounded-[22px] border border-white/10 bg-white/[0.055] p-4">
           <span className="flex items-center gap-2 text-sm text-slate-400"><MapPin size={15} /> Destination</span>
-          <input className="mt-2 w-full border-0 bg-transparent text-base font-semibold text-white outline-none placeholder:text-slate-600" defaultValue="Skyline Tower, Business District" />
+          <input
+  className="mt-2 w-full border-0 bg-transparent text-base font-semibold text-white outline-none placeholder:text-slate-600"
+  value={destination}
+  onChange={(e) => setDestination(e.target.value)}
+/>
         </label>
         <div>
           <p className="mb-3 text-sm text-slate-400">Travel Preference</p>
@@ -53,9 +104,14 @@ function SearchCard() {
             ))}
           </div>
         </div>
-        <Link to="/processing" className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#3B82F6] via-[#06B6D4] to-[#8B5CF6] px-5 py-4 text-sm font-bold text-white shadow-[0_0_38px_rgba(6,182,212,0.28)] transition hover:scale-[1.01]">
-          Find Best Route <ArrowRight size={17} />
-        </Link>
+        <button
+  onClick={handleSearch}
+  disabled={loading}
+  className="flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#3B82F6] via-[#06B6D4] to-[#8B5CF6] px-5 py-4 text-sm font-bold text-white shadow-[0_0_38px_rgba(6,182,212,0.28)] transition hover:scale-[1.01]"
+>
+  {loading ? 'Finding Route...' : 'Find Best Route'}
+  <ArrowRight size={17} />
+</button>
       </div>
     </GlassCard>
   )

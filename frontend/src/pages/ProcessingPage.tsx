@@ -3,6 +3,7 @@ import { Activity, BrainCircuit, Cpu, DatabaseZap, GitBranch, Network, Radar, Sp
 import { Link } from 'react-router-dom'
 import { GlassCard } from '../components/ui/GlassCard'
 import { agentSteps } from '../services/mockData'
+import { useRouteStore } from '../store/routeStore'
 
 const toneClasses = {
   cyan: 'border-cyan-400/25 bg-cyan-400/10 text-cyan-300',
@@ -59,24 +60,58 @@ function AgentCard({ agent, index }: { agent: (typeof agentSteps)[number]; index
 }
 
 export function ProcessingPage() {
+
+  const geographicResult = useRouteStore(
+    (state) => state.geographicResult
+  )
+  const result = geographicResult as {
+  origin_text?: string
+  destination_text?: string
+}
+
+  console.log("Geographic Result:", geographicResult)
+
   return (
-    <div className="space-y-8">
-      <section className="grid min-h-[calc(100vh-9rem)] gap-8 lg:grid-cols-12 lg:items-center">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-4">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-sm text-cyan-300">
-            <Sparkles size={16} />
-            Multi-Agent AI Swarm
-          </div>
-          <h1 className="text-[40px] font-bold leading-[1.08] text-white sm:text-[56px]">
-            Four agents are negotiating your route.
-          </h1>
-          <p className="mt-5 text-lg leading-8 text-slate-400">
-            Geographic, transit, mobility and synthesis agents exchange live evidence before the final recommendation is released.
-          </p>
-          <Link to="/recommendation" className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-white shadow-[0_0_36px_rgba(6,182,212,0.24)]">
-            View Recommendation
-          </Link>
-        </motion.div>
+  <div className="space-y-8">
+    <section className="grid min-h-[calc(100vh-9rem)] gap-8 lg:grid-cols-12 lg:items-center">
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="lg:col-span-4"
+      >
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-2 text-sm text-cyan-300">
+          <Sparkles size={16} />
+          Multi-Agent AI Swarm
+        </div>
+
+        <h1 className="text-[40px] font-bold leading-[1.08] text-white sm:text-[56px]">
+          Four agents are negotiating your route.
+        </h1>
+
+        <p className="mt-5 text-lg leading-8 text-slate-400">
+          Route detected from{" "}
+          <span className="font-semibold text-cyan-300">
+            {result.origin_text}
+          </span>{" "}
+          to{" "}
+          <span className="font-semibold text-cyan-300">
+            {result.destination_text}
+          </span>
+          .
+          <br />
+          <br />
+          Geographic Agent has successfully analyzed your request and shared the
+          route details with the Transit, Mobility and Synthesis agents for
+          further optimization.
+        </p>
+
+        <Link
+          to="/recommendation"
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-white shadow-[0_0_36px_rgba(6,182,212,0.24)]"
+        >
+          View Recommendation
+        </Link>
+      </motion.div>
 
         <div className="relative min-h-[690px] lg:col-span-8">
           <div className="absolute inset-0 rounded-[44px] border border-white/10 bg-[#0B1120]/55 shadow-[0_32px_120px_rgba(2,8,23,0.48)] backdrop-blur-2xl" />
