@@ -1,11 +1,9 @@
 import { NavLink, Outlet } from 'react-router-dom'
-import { BrainCircuit, Compass, LayoutGrid, Map, Navigation, UserRound, Zap } from 'lucide-react'
+import { Compass, LayoutGrid, Map, UserRound, Zap } from 'lucide-react'
 
 const navItems = [
-  { to: '/', label: 'Home', icon: LayoutGrid },
-  { to: '/processing', label: 'Agents', icon: BrainCircuit },
-  { to: '/recommendation', label: 'Route', icon: Compass },
-  { to: '/compare', label: 'Compare', icon: Navigation },
+  { to: '/', label: 'Planner', icon: LayoutGrid },
+  { to: '/recommendation', label: 'Journey Options', icon: Compass },
   { to: '/map', label: 'Live Map', icon: Map },
 ]
 
@@ -22,7 +20,7 @@ export function AppShell() {
             </div>
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-semibold text-[#202124]">UrbanPilot AI</p>
-              <p className="truncate text-xs text-[#5f6368]">Multi-Agent Mobility</p>
+              <p className="truncate text-xs text-[#5f6368]">Multimodal Journey Planner</p>
             </div>
           </NavLink>
 

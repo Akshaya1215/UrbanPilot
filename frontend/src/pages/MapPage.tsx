@@ -25,13 +25,16 @@ import {
   X,
   Zap,
 } from 'lucide-react'
+import markerIcon2x from '../assets/leaflet/marker-icon-2x.png'
+import markerIcon from '../assets/leaflet/marker-icon.png'
+import markerShadow from '../assets/leaflet/marker-shadow.png'
 import { analyzeEnvironment, type EnvironmentAnalyzeResponse } from '../services/environmentService'
 
 delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 })
 
 type LatLng = { lat: number; lng: number }
@@ -49,13 +52,23 @@ type NominatimItem = { place_id: number | string; display_name: string; lat: str
 const MAX_OSRM_DRIVING_DISTANCE_METERS = 5_000_000
 
 const destinationIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
   shadowSize: [41, 41],
 })
+
+function bookingUrlForTransport(transport: string, bookingUrl?: string) {
+  if (bookingUrl) return bookingUrl
+  if (/bus/i.test(transport)) return 'https://www.redbus.in'
+  if (/train|rail/i.test(transport)) return 'https://www.irctc.co.in/'
+  if (/cab|taxi|car/i.test(transport)) return 'https://www.uber.com/in/en/'
+  if (/rapido|bike taxi/i.test(transport)) return 'https://www.rapido.bike/'
+  if (/metro/i.test(transport)) return 'https://chennaimetrorail.org/'
+  return 'https://www.google.com/search?q=public+transport+booking+India'
+}
 
 const userIcon = L.divIcon({
   className: '',
@@ -419,7 +432,7 @@ function Metric({ label, value }: { label: string; value: string }) {
   )
 }
 
-function AiAssistant({ environment, error }: { environment: EnvironmentAnalyzeResponse | null; error: string | null }) {
+function RouteInsights({ environment, error }: { environment: EnvironmentAnalyzeResponse | null; error: string | null }) {
   const recommendation = environment?.recommendation
   const suggestions = [
     environment?.traffic.level ? `Traffic ahead is ${environment.traffic.level.toLowerCase()} with ${environment.traffic.delayMinutes} min delay.` : null,
@@ -437,22 +450,27 @@ function AiAssistant({ environment, error }: { environment: EnvironmentAnalyzeRe
             <Bot size={18} />
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#202124]">AI Assistant</p>
-            <p className="text-xs text-[#5f6368]">Weather, traffic and transit agents</p>
+            <p className="text-sm font-semibold text-[#202124]">Route Insights</p>
+            <p className="text-xs text-[#5f6368]">Weather, traffic and transport signals</p>
           </div>
         </div>
         <div className="mt-3 space-y-2">
           {error && <p className="rounded-lg bg-[#fce8e6] px-3 py-2 text-sm text-[#d93025]">{error}</p>}
-          {!error && suggestions.length === 0 && <p className="text-sm text-[#5f6368]">Agent recommendations appear after a route is selected.</p>}
+          {!error && suggestions.length === 0 && <p className="text-sm text-[#5f6368]">Route guidance appears after a destination is selected.</p>}
           {suggestions.map((suggestion) => (
             <p key={suggestion} className="rounded-lg bg-[#f8fafd] px-3 py-2 text-sm text-[#3c4043]">{suggestion}</p>
           ))}
         </div>
         {maybeBooking && (
-          <button type="button" className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a73e8] px-3 py-2 text-sm font-semibold text-white">
+          <a
+            href={bookingUrlForTransport(recommendation.recommendedTransport, recommendation.bookingUrl ?? environment?.bookingUrl)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-[#1a73e8] px-3 py-2 text-sm font-semibold text-white"
+          >
             {/train|metro/i.test(recommendation.recommendedTransport) ? <Train size={16} /> : /bus/i.test(recommendation.recommendedTransport) ? <Bus size={16} /> : <Car size={16} />}
             Book Now
-          </button>
+          </a>
         )}
       </div>
     </div>
@@ -500,13 +518,13 @@ export function MapPage() {
   const [directionsOpen, setDirectionsOpen] = useState(true)
   const [darkMap, setDarkMap] = useState(false)
   const [environment, setEnvironment] = useState<EnvironmentAnalyzeResponse | null>(null)
-  const [agentError, setAgentError] = useState<string | null>(null)
+  const [signalError, setSignalError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [arrived, setArrived] = useState(false)
   const previousPosition = useRef<LatLng | null>(null)
   const previousTime = useRef<number | null>(null)
   const rerouteAt = useRef(0)
-  const agentFetchAt = useRef(0)
+  const signalFetchAt = useRef(0)
   const routedDestination = useRef<string | null>(null)
 
   useEffect(() => {
@@ -586,19 +604,19 @@ export function MapPage() {
 
   useEffect(() => {
     if (!current || !destination) return
-    if (Date.now() - agentFetchAt.current < 60_000 && environment) return
-    agentFetchAt.current = Date.now()
+    if (Date.now() - signalFetchAt.current < 60_000 && environment) return
+    signalFetchAt.current = Date.now()
     const payload = { origin: current, destination: { lat: destination.lat, lng: destination.lng }, departureTime: new Date().toISOString() }
     console.info('[MapPage] Backend environment request body', payload)
     analyzeEnvironment(payload)
       .then((data) => {
         console.info('[MapPage] Backend environment response', data)
         setEnvironment(data)
-        setAgentError(null)
+        setSignalError(null)
       })
       .catch((error: Error) => {
         console.error('[MapPage] Backend environment exception', error)
-        setAgentError(error.message)
+        setSignalError(error.message)
       })
   }, [current, destination, environment])
 
@@ -671,7 +689,7 @@ export function MapPage() {
       <InstructionCard step={arrived ? { instruction: 'You have arrived', distance: 0, duration: 0, name: destination?.name ?? 'Destination', maneuver: { type: 'arrive' }, location: current ?? { lat: 0, lng: 0 } } : currentStep} nextStep={nextStep} etaSeconds={etaSeconds} remaining={remaining} />
       <JourneyPanel speed={speed} remaining={remaining} etaSeconds={etaSeconds} progress={progressPercent} environment={environment} />
       <DirectionsPanel open={directionsOpen} steps={route?.steps ?? []} onToggle={() => setDirectionsOpen((value) => !value)} />
-      <AiAssistant environment={environment} error={agentError} />
+      <RouteInsights environment={environment} error={signalError} />
       <BottomCard speed={speed} remaining={remaining} etaSeconds={etaSeconds} progress={progressPercent} />
 
       {!autoFollow && current && (

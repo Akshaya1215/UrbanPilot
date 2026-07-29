@@ -5,10 +5,13 @@ export type Coordinate = {
   lng: number
 }
 
+export type TravelPreference = 'Fastest' | 'Cheapest' | 'Balanced' | 'Comfort'
+
 export type EnvironmentAnalyzeRequest = {
   origin: Coordinate
   destination: Coordinate
   departureTime?: string
+  travelPreference?: TravelPreference
 }
 
 export type WeatherImpact = {
@@ -33,6 +36,61 @@ export type TravelImpact = {
   bikeComfort: string
   recommendedTransport: string
   reason: string
+  bookingUrl?: string
+}
+
+export type JourneyLeg = {
+  transport: string
+  instruction: string
+  durationMinutes: number
+  distanceMeters: number
+  departureTime: string
+  arrivalTime: string
+  fare: number
+  stationName?: string
+  busNumber?: string
+  trainNumber?: string
+  metroLine?: string
+  waitingTimeMinutes?: number
+  bookingUrl?: string
+}
+
+export type BackendRouteOption = {
+  id?: string
+  rank?: number
+  recommended?: boolean
+  transport?: string
+  transportSequence?: string[]
+  journeyType?: string
+  departureTime?: string
+  arrivalTime?: string
+  departure?: string
+  arrival?: string
+  waitingTime?: string
+  eta?: string | number
+  etaMinutes?: number
+  travelTime?: string | number
+  totalEta?: string
+  distance?: string | number
+  distanceMeters?: number
+  fare?: string | number
+  totalFare?: string | number
+  weather?: string
+  weatherImpact?: string
+  traffic?: string
+  trafficImpact?: string
+  walkingDistance?: string | number
+  walkingDistanceMeters?: number
+  carbon?: string | number
+  carbonEmissionKg?: number
+  comfort?: string | number
+  comfortScore?: number
+  availability?: string | { status?: string }
+  overallScore?: string | number
+  score?: string | number
+  reason?: string
+  bookingUrl?: string
+  legs?: JourneyLeg[]
 }
 
 export type EnvironmentAnalyzeResponse = {
@@ -41,6 +99,8 @@ export type EnvironmentAnalyzeResponse = {
   recommendation: TravelImpact
   travelImpact: TravelImpact
   message?: string
+  bookingUrl?: string
+  routes?: BackendRouteOption[]
 }
 
 // Backend may return travelImpact or recommendation — accept both
@@ -50,6 +110,8 @@ type RawResponse = {
   recommendation?: TravelImpact
   travelImpact?: TravelImpact
   message?: string
+  bookingUrl?: string
+  routes?: BackendRouteOption[]
 }
 
 function isValidCoordinate(coordinate: Coordinate) {
@@ -125,6 +187,8 @@ export async function analyzeEnvironment(
       recommendation,
       travelImpact: recommendation,
       message: data.message,
+      bookingUrl: data.bookingUrl,
+      routes: data.routes,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Environmental analysis failed.'

@@ -1,17 +1,20 @@
 import { useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowRight, Clock3, LocateFixed, MapPin, SlidersHorizontal } from 'lucide-react'
+import type { TravelPreference } from '../../services/environmentService'
 import { GlassCard } from '../ui/GlassCard'
 import { LocationSearch } from './LocationSearch'
 import type { OsrmRoute, SearchResult } from './types'
 
-export type TravelPreference = 'Fastest' | 'Cheapest' | 'Balanced'
-
-const PREFERENCES: TravelPreference[] = ['Fastest', 'Cheapest', 'Balanced']
+const PREFERENCES: TravelPreference[] = ['Fastest', 'Cheapest', 'Balanced', 'Comfort']
 const OSRM = 'https://router.project-osrm.org/route/v1/driving'
 
 function toDatetimeLocal(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
+function minimumDepartureTime() {
+  return toDatetimeLocal(new Date(Date.now() + 5 * 60_000))
 }
 
 async function fetchOsrmRoute(origin: SearchResult, destination: SearchResult): Promise<OsrmRoute> {
@@ -21,7 +24,7 @@ async function fetchOsrmRoute(origin: SearchResult, destination: SearchResult): 
       `${OSRM}/${origin.lon},${origin.lat};${destination.lon},${destination.lat}?overview=full&geometries=geojson`,
     )
   } catch {
-    throw new Error('OSRM is unreachable — check your internet connection.')
+    throw new Error('OSRM is unreachable. Check your internet connection.')
   }
   if (!res.ok) throw new Error(`OSRM returned HTTP ${res.status}. Try again shortly.`)
   const data = await res.json() as {
@@ -35,11 +38,11 @@ async function fetchOsrmRoute(origin: SearchResult, destination: SearchResult): 
   if (data.code !== 'Ok' || !data.routes[0]) {
     throw new Error('No drivable route found between these two locations.')
   }
-  const r = data.routes[0]
+  const route = data.routes[0]
   return {
-    distanceMeters: r.distance,
-    durationSeconds: r.duration,
-    geometry: r.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
+    distanceMeters: route.distance,
+    durationSeconds: route.duration,
+    geometry: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]),
   }
 }
 
@@ -59,15 +62,15 @@ type RoutePlannerProps = {
 
 const phaseLabel: Record<Phase, string> = {
   idle: 'Find Best Route',
-  routing: 'Drawing Route…',
-  analyzing: 'Analyzing with AI…',
+  routing: 'Drawing Route...',
+  analyzing: 'Analyzing route...',
 }
 
 export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerProps) {
   const [origin, setOrigin] = useState<SearchResult | null>(null)
   const [destination, setDestination] = useState<SearchResult | null>(null)
   const [preference, setPreference] = useState<TravelPreference>('Balanced')
-  const [departureTime, setDepartureTime] = useState(toDatetimeLocal(new Date()))
+  const [departureTime, setDepartureTime] = useState(minimumDepartureTime())
   const [phase, setPhase] = useState<Phase>('idle')
 
   const currentPhase: Phase = analyzing ? 'analyzing' : phase
@@ -76,6 +79,14 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
   const handleFindRoute = async () => {
     if (!origin || !destination) {
       onError('Select both a starting point and a destination from the suggestions.')
+      return
+    }
+    const minimum = new Date(Date.now() + 5 * 60_000)
+    const selected = new Date(departureTime)
+    if (Number.isNaN(selected.getTime()) || selected < minimum) {
+      const nextMinimum = minimumDepartureTime()
+      setDepartureTime(nextMinimum)
+      onError('Departure time must be at least 5 minutes in the future.')
       return
     }
     setPhase('routing')
@@ -104,7 +115,7 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
 
       <div className="space-y-3">
         <LocationSearch
-          label="Current Location"
+          label="Origin"
           placeholder="Search your starting point"
           icon={<LocateFixed size={14} />}
           value={origin}
@@ -125,14 +136,14 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
           <p className="mb-3 flex items-center gap-2 text-sm font-medium text-[#5f6368]">
             <SlidersHorizontal size={14} /> Travel Preference
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {PREFERENCES.map((item) => (
               <button
                 key={item}
                 type="button"
                 onClick={() => setPreference(item)}
                 disabled={busy}
-                className={`rounded-full border px-3 py-2 text-sm font-medium transition disabled:pointer-events-none ${
+                className={`min-h-10 rounded-full border px-3 py-2 text-sm font-medium transition disabled:pointer-events-none ${
                   preference === item
                     ? 'border-[#1a73e8] bg-[#e8f0fe] text-[#1a73e8]'
                     : 'border-[#e0e0e0] bg-white text-[#5f6368] hover:border-[#1a73e8] hover:text-[#1a73e8]'
@@ -152,6 +163,7 @@ export function RoutePlanner({ analyzing, onRouteReady, onError }: RoutePlannerP
             type="datetime-local"
             value={departureTime}
             onChange={(e) => setDepartureTime(e.target.value)}
+            min={minimumDepartureTime()}
             disabled={busy}
             className="mt-2 w-full border-0 bg-transparent text-sm font-semibold text-[#202124] outline-none disabled:opacity-50"
           />

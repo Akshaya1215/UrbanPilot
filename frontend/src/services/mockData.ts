@@ -17,41 +17,6 @@ export const trafficOverview = [
   { label: 'East Hub', value: 42, tone: 'emerald' },
 ]
 
-export const agentSteps = [
-  {
-    name: 'Geographic Agent',
-    status: 'Resolved',
-    progress: 100,
-    detail: 'Demand zones, walkability, station access',
-    logs: ['Origin snapped to Sector 12 gate', '540m walk radius scored', 'Rain-safe corridors preferred'],
-    tone: 'cyan',
-  },
-  {
-    name: 'Transit Agent',
-    status: 'Running',
-    progress: 86,
-    detail: 'Metro frequency, transfers, platform load',
-    logs: ['Blue line headway: 4 min', 'Platform 4 crowding moderate', 'Interchange risk reduced'],
-    tone: 'violet',
-  },
-  {
-    name: 'Mobility Agent',
-    status: 'Collecting',
-    progress: 72,
-    detail: 'Cab, bike taxi, fare surge, pickup ETA',
-    logs: ['Rapido ETA dropped to 3 min', 'Cab surge detected near CBD', 'Bike taxi confidence 91%'],
-    tone: 'emerald',
-  },
-  {
-    name: 'Synthesis Agent',
-    status: 'Optimizing',
-    progress: 58,
-    detail: 'Cost, time, comfort, carbon trade-offs',
-    logs: ['Balanced profile selected', 'Rs. 182 savings confirmed', 'Final explanation generated'],
-    tone: 'amber',
-  },
-]
-
 export const routeComparison = [
   { id: 1, title: 'Metro', cost: 'Rs. 96', eta: '34 min', walking: '1.2 km', transfers: '2', comfort: 74, recommended: false, carbon: '0.42 kg', accent: 'cyan' },
   { id: 2, title: 'Cab', cost: 'Rs. 265', eta: '22 min', walking: '0.4 km', transfers: '0', comfort: 82, recommended: false, carbon: '2.9 kg', accent: 'violet' },
